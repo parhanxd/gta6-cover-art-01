@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vice Cover Studio — GTA-style cover art maker</title>
+<meta name="description" content="Turn your own photos into GTA-style multi-panel cover art, offline in your browser. Crop and position every panel, letter the caption, export PNGs in 1080×1080, 1080×1350 and 1920×1080.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffc93c'/%3E%3Cstop offset='.55' stop-color='%23ff7a18'/%3E%3Cstop offset='1' stop-color='%23ff2e88'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='12' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Arial Black,sans-serif' font-size='30' font-weight='900' text-anchor='middle' fill='%2312081f'%3EVC%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">VC</span>
+    <div>
+      <h1>VICE COVER STUDIO</h1>
+      <p>Your photos &rarr; GTA-style cover art. Offline, nothing uploads.</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button id="undoBtn" class="ghost" title="Undo (Ctrl+Z)" disabled>&#8617; Undo</button>
+    <button id="redoBtn" class="ghost" title="Redo (Ctrl+Y)" disabled>Redo &#8618;</button>
+    <button id="resetBtn" class="ghost" title="Start over with the sample photos">Reset</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="stage-col">
+    <div class="size-row" role="group" aria-label="Export size">
+      <span class="row-label">Canvas</span>
+      <button class="size-btn" data-size="square" data-w="1080" data-h="1080">Square 1080&times;1080</button>
+      <button class="size-btn" data-size="portrait" data-w="1080" data-h="1350">Portrait 1080&times;1350</button>
+      <button class="size-btn" data-size="wide" data-w="1920" data-h="1080">Wide 1920&times;1080</button>
+      <button class="size-btn" data-size="story" data-w="1080" data-h="1920">Story 1080&times;1920</button>
+    </div>
+    <div class="canvas-wrap" id="canvasWrap">
+      <canvas id="coverCanvas" width="1080" height="1080"></canvas>
+      <p class="canvas-hint" id="canvasHint">Click a panel to select it &middot; drag to move its photo &middot; scroll to zoom</p>
+    </div>
+    <div class="preset-row" role="group" aria-label="One-click looks">
+      <span class="row-label">Looks</span>
+      <button class="preset-btn" data-preset="heist">Sunset Heist</button>
+      <button class="preset-btn" data-preset="neon">Neon Nights</button>
+      <button class="preset-btn" data-preset="golden">Golden Getaway</button>
+      <button class="preset-btn" data-preset="noir">Noir Pier</button>
+    </div>
+    <div class="export-row">
+      <button id="exportBtn" class="primary">Export PNG &darr;</button>
+      <button id="exportAllBtn" class="primary outline">Export all 4 sizes</button>
+      <span class="export-note" id="exportNote">PNG, exact pixels, saved to your downloads.</span>
+    </div>
+  </section>
+
+  <aside class="controls">
+    <section class="panel" id="photosPanel">
+      <h2>1 &middot; Your photos</h2>
+      <label class="upload-btn" for="fileInput">+ Add photos from your device</label>
+      <input type="file" id="fileInput" accept="image/*" multiple hidden>
+      <div class="thumbs" id="thumbs"></div>
+      <p class="fine">Photos stay on your machine &mdash; they are never uploaded. Two sample
+      photos are loaded so you can try everything right away.</p>
+      <div class="field-row">
+        <label for="panelPhoto">Photo in selected panel</label>
+        <select id="panelPhoto"></select>
+      </div>
+      <button id="fillAllBtn" class="ghost wide">Fill every panel with this photo</button>
+      <div class="field-row">
+        <label for="zoomRange">Zoom <span class="val" id="zoomVal">100%</span></label>
+        <input type="range" id="zoomRange" min="50" max="300" value="100">
+      </div>
+      <div class="field-row">
+        <label for="panX">Position X <span class="val" id="panXVal">0</span></label>
+        <input type="range" id="panX" min="-100" max="100" value="0">
+      </div>
+      <div class="field-row">
+        <label for="panY">Position Y <span class="val" id="panYVal">0</span></label>
+        <input type="range" id="panY" min="-100" max="100" value="0">
+      </div>
+      <button id="flipBtn" class="ghost wide">Flip selected photo &#8646;</button>
+    </section>
+
+    <section class="panel">
+      <h2>2 &middot; Layout</h2>
+      <div class="layout-grid" id="layoutGrid"></div>
+    </section>
+
+    <section class="panel">
+      <h2>3 &middot; Colour grade</h2>
+      <div class="grade-grid" id="gradeGrid"></div>
+    </section>
+
+    <section class="panel">
+      <h2>4 &middot; Caption</h2>
+      <div class="field-row">
+        <label for="titleInput">Title</label>
+        <input type="text" id="titleInput" maxlength="24" value="SUNSET HEIST" autocomplete="off">
+      </div>
+      <div class="field-row">
+        <label for="subtitleInput">Subtitle (script)</label>
+        <input type="text" id="subtitleInput" maxlength="40" value="Neon Shore nights" autocomplete="off">
+      </div>
+      <div class="field-row">
+        <label for="badgeInput">Badge ribbon (blank hides it)</label>
+        <input type="text" id="badgeInput" maxlength="18" value="LAUNCH WEEK" autocomplete="off">
+      </div>
+      <div class="field-row">
+        <label>Title style</label>
+        <div class="seg" id="titleStyleSeg">
+          <button data-style="white" class="on">White</button>
+          <button data-style="sunset">Sunset</button>
+          <button data-style="outline">Outline</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <label>Title position</label>
+        <div class="seg" id="titlePosSeg">
+          <button data-pos="bottom" class="on">Bottom</button>
+          <button data-pos="top">Top</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <label for="titleSize">Title size <span class="val" id="titleSizeVal">100%</span></label>
+        <input type="range" id="titleSize" min="60" max="150" value="100">
+      </div>
+      <div class="field-row">
+        <label for="heatRange">Heat meter <span class="val" id="heatVal">&#9733;&#9733;&#9733;&#9734;&#9734;</span></label>
+        <input type="range" id="heatRange" min="0" max="5" value="3">
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>5 &middot; Finish</h2>
+      <label class="check"><input type="checkbox" id="frameChk" checked> White poster frame</label>
+      <label class="check"><input type="checkbox" id="grainChk" checked> Film grain</label>
+      <label class="check"><input type="checkbox" id="vignetteChk" checked> Vignette</label>
+      <label class="check"><input type="checkbox" id="halftoneChk"> Halftone title block</label>
+      <p class="fine">Original lettering (Anton + Pacifico, SIL Open Font License) and your own
+      photos only &mdash; no game logos, artwork or fonts.</p>
+    </section>
+  </aside>
+</main>
+
+<footer class="foot">
+  <span>Vice Cover Studio &middot; an offline cover maker. Made for GTA VI launch week.</span>
+  <span id="statusLine">Ready.</span>
+</footer>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
