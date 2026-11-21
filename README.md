@@ -1,5 +1,9 @@
 # Vice Cover Studio — GTA-style cover art maker
 
+[![make.fun](https://make.fun/badge/gta6-cover-art-01.svg)](https://make.fun/c/gta6-cover-art-01)
+[![rank](https://make.fun/badge/gta6-cover-art-01/parhanxd/gta6-cover-art-01/rank.svg)](https://make.fun/c/gta6-cover-art-01)
+[![reward](https://make.fun/badge/gta6-cover-art-01/parhanxd/gta6-cover-art-01/reward.svg)](https://make.fun/c/gta6-cover-art-01)
+
 Turn your own photos into GTA-style multi-panel cover art, offline in your
 browser. Nothing uploads: photos are read on your machine and never leave it.
 
